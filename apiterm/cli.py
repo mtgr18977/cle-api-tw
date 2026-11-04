@@ -27,7 +27,8 @@ def _cmd_analyze(a) -> int:
 def _cmd_build_reference(a) -> int:
     from .annotate import load_model
     from .reference import build_reference, iter_texts
-    meta = build_reference(iter_texts(a.inputs), a.out, load_model(), source=a.source)
+    meta = build_reference(iter_texts(a.inputs), a.out, load_model(), source=a.source,
+                           citation=a.citation, min_count=a.min_count, processes=a.processes)
     print(json.dumps(meta, indent=2))
     return 0
 
@@ -74,6 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("inputs", nargs="+", help=".txt (one text per line) / .jsonl ({'text': ...}) files or dirs")
     s.add_argument("--out", required=True)
     s.add_argument("--source", default="unspecified", help="free-text provenance recorded in the table")
+    s.add_argument("--citation", default="", help="citation string stored in the table metadata")
+    s.add_argument("--min-count", type=int, default=1, help="store only candidates seen at least this often")
+    s.add_argument("--processes", type=int, default=1, help="spaCy worker processes")
     s.set_defaults(fn=_cmd_build_reference)
 
     s = sub.add_parser("report", help="render the static HTML report from an analyze output dir")

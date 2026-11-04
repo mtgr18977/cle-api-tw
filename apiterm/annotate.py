@@ -138,9 +138,9 @@ def _convert(doc, drop: int = 0, overrides: frozenset[str] = NOUN_OVERRIDES) -> 
 
 
 def annotate_strings(texts: Iterable[str], nlp, batch_size: int = 64,
-                     overrides: frozenset[str] = NOUN_OVERRIDES) -> Iterator[list[Sent]]:
+                     overrides: frozenset[str] = NOUN_OVERRIDES, n_process: int = 1) -> Iterator[list[Sent]]:
     pairs = (_lead_fix(t) for t in texts)            # streams: the reference corpus can be huge
-    for doc, drop in nlp.pipe(pairs, batch_size=batch_size, as_tuples=True):
+    for doc, drop in nlp.pipe(pairs, batch_size=batch_size, as_tuples=True, n_process=n_process):
         yield _convert(doc, drop, overrides)
 
 

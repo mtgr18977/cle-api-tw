@@ -97,3 +97,16 @@ def test_method_overlap_and_outputs(result, tmp_path):
         assert "log_likelihood" in next(csv.reader(fh))
     assert json.loads((tmp_path / "summary.json").read_text())["reference"]["source"] == "synthetic test news"
     assert len(paths) == 10
+
+
+def test_reference_min_count_and_citation(tmp_path, nlp):
+    from apiterm.reference import build_reference
+    texts = ["The company will file a lawsuit."] * 3 + ["The mayor will delete the record."]
+    db = tmp_path / "r.db"
+    meta = build_reference(texts, db, nlp, source="s", citation="Hamborg2017", dedup=False, min_count=2)
+    ref = Reference(db)
+    d = ref.describe()
+    assert d["citation"] == "Hamborg2017" and d["min_count"] == 2
+    assert ref.count("surface", Cand("V+N", ("file", "lawsuit"))) == 3
+    assert ref.count("surface", Cand("V+N", ("delete", "record"))) == 0       # pruned
+    assert ref.total("surface") == meta["total_surface"] > 3                  # totals keep pruned counts

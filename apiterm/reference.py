@@ -45,6 +45,7 @@ class Reference:
 
     def describe(self) -> dict:
         return {"path": self.path.name, "source": self.meta("source", "unknown"),
+                "citation": self.meta("citation", ""), "min_count": int(self.meta("min_count", 1)),
                 "texts": int(self.meta("texts", 0)),
                 **{f"total_{m}": self._totals[m] for m in METHODS}}
 
@@ -72,11 +73,14 @@ def iter_texts(paths: Iterable[str | Path]) -> Iterator[str]:
 
 
 def build_reference(texts: Iterable[str], out_path: str | Path, nlp, *, source: str = "unspecified",
-                    dedup: bool = True, batch_size: int = 64) -> dict:
+                    dedup: bool = True, batch_size: int = 64, citation: str = "",
+                    min_count: int = 1, processes: int = 1) -> dict:
     """Annotate ``texts`` with the SAME model/patterns as the domain corpus and store counts.
 
     Exact duplicate text units are skipped (``dedup``), as for the domain corpus.
     Counts are kept in memory until the end: process very large corpora in shards.
+    ``min_count`` drops rarer candidates from the stored table (totals still include them),
+    which keeps a publishable table small. ``citation`` is stored in the table metadata.
     """
     seen: set[bytes] = set()
 
@@ -99,7 +103,7 @@ def build_reference(texts: Iterable[str], out_path: str | Path, nlp, *, source: 
             n_texts += 1
             yield t
 
-    for sents in annotate_strings(counted(), nlp, batch_size):
+    for sents in annotate_strings(counted(), nlp, batch_size, n_process=processes):
         for s in sents:
             for m in METHODS:
                 for c in extract_from_sentence(s, m):
@@ -114,8 +118,8 @@ def build_reference(texts: Iterable[str], out_path: str | Path, nlp, *, source: 
     db.executescript(SCHEMA)
     for m in METHODS:
         db.executemany("INSERT INTO counts VALUES (?,?,?,?)",
-                       ((m, c.pattern, c.key, n) for c, n in counters[m].items()))
-    meta = {"source": source, "texts": n_texts, "model": getattr(nlp, "meta", {}).get("name", ""),
+                       ((m, c.pattern, c.key, n) for c, n in counters[m].items() if n >= min_count))
+    meta = {"source": source, "citation": citation, "min_count": min_count, "texts": n_texts, "model": getattr(nlp, "meta", {}).get("name", ""),
             **{f"total_{m}": totals[m] for m in METHODS}}
     db.executemany("INSERT INTO meta VALUES (?,?)", ((k, str(v)) for k, v in meta.items()))
     db.commit()
