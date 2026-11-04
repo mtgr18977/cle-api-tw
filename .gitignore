@@ -12,3 +12,4 @@ out/*.db
 reference/data/*.jsonl
 reference/data/*.txt
 reference/data/*.log
+reference/data/*_full.db

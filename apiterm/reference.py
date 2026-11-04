@@ -125,3 +125,28 @@ def build_reference(texts: Iterable[str], out_path: str | Path, nlp, *, source: 
     db.commit()
     db.close()
     return meta
+
+
+def prune_reference(src: str | Path, dst: str | Path, min_count: int) -> dict:
+    """Copy ``src`` keeping only candidates with count >= ``min_count`` (publishable size).
+
+    Totals in the metadata are unchanged, so relative frequencies stay correct; pruned
+    candidates are simply looked up as 0.
+    """
+    src, dst = Path(src), Path(dst)
+    if dst.exists():
+        dst.unlink()
+    db = sqlite3.connect(dst)
+    db.execute("ATTACH DATABASE ? AS s", (str(src),))
+    db.execute("CREATE TABLE counts(method TEXT, pattern TEXT, key TEXT, n INTEGER, "
+               "PRIMARY KEY(method, pattern, key)) WITHOUT ROWID")
+    db.execute("CREATE TABLE meta(k TEXT PRIMARY KEY, v TEXT)")
+    db.execute("INSERT INTO counts SELECT method, pattern, key, n FROM s.counts WHERE n >= ?", (min_count,))
+    db.execute("INSERT INTO meta SELECT k, v FROM s.meta WHERE k <> 'min_count'")
+    db.execute("INSERT INTO meta VALUES ('min_count', ?)", (str(min_count),))
+    kept = db.execute("SELECT count(*) FROM counts").fetchone()[0]
+    db.commit()
+    db.execute("DETACH DATABASE s")
+    db.execute("VACUUM")
+    db.close()
+    return {"rows_kept": kept, "bytes": dst.stat().st_size}

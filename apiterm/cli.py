@@ -33,6 +33,12 @@ def _cmd_build_reference(a) -> int:
     return 0
 
 
+def _cmd_prune_reference(a) -> int:
+    from .reference import prune_reference
+    print(json.dumps(prune_reference(a.src, a.out, a.min_count), indent=2))
+    return 0
+
+
 def _cmd_report(a) -> int:
     from .report import render_report
     p = render_report(a.out_dir, a.html, title=a.title, method=a.method)
@@ -79,6 +85,12 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--min-count", type=int, default=1, help="store only candidates seen at least this often")
     s.add_argument("--processes", type=int, default=1, help="spaCy worker processes")
     s.set_defaults(fn=_cmd_build_reference)
+
+    s = sub.add_parser("prune-reference", help="shrink a reference table to a publishable size")
+    s.add_argument("src")
+    s.add_argument("--out", required=True)
+    s.add_argument("--min-count", type=int, required=True)
+    s.set_defaults(fn=_cmd_prune_reference)
 
     s = sub.add_parser("report", help="render the static HTML report from an analyze output dir")
     s.add_argument("out_dir")

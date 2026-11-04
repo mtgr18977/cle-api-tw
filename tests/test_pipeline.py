@@ -110,3 +110,17 @@ def test_reference_min_count_and_citation(tmp_path, nlp):
     assert ref.count("surface", Cand("V+N", ("file", "lawsuit"))) == 3
     assert ref.count("surface", Cand("V+N", ("delete", "record"))) == 0       # pruned
     assert ref.total("surface") == meta["total_surface"] > 3                  # totals keep pruned counts
+
+
+def test_prune_reference_keeps_totals(tmp_path, nlp):
+    from apiterm.reference import build_reference, prune_reference
+    texts = ["The company will file a lawsuit."] * 5 + ["The mayor will delete the record."]
+    full, small = tmp_path / "f.db", tmp_path / "s.db"
+    build_reference(texts, full, nlp, source="s", citation="c", dedup=False)
+    info = prune_reference(full, small, 5)
+    a, b = Reference(full), Reference(small)
+    assert info["rows_kept"] < sum(1 for _ in a._db.execute("select 1 from counts"))
+    assert b.count("surface", Cand("V+N", ("file", "lawsuit"))) == 5
+    assert b.count("surface", Cand("V+N", ("delete", "record"))) == 0
+    assert b.total("surface") == a.total("surface")
+    assert b.describe()["citation"] == "c" and b.describe()["min_count"] == 5
