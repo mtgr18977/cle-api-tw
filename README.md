@@ -57,6 +57,7 @@ Thresholds: t ≥ 2 (needs freq ≥ 4, since t ≤ √c) and log-likelihood ≥ 
 | M1–M2, M4, M6, M7, M8 | Implemented and tested (tests use a small fictional spec and a synthetic news stub) |
 | M5 | Tooling only (sample + evaluate); the manual annotation is yours to do |
 | M3 | Done: CC-News English sample (90k articles), counts table in `reference/data/` (see `reference/README.md`, `CITATION.md`) |
+| First run | Pipeline run on the three specs, see `results/README.md` (raw results; triage thresholds need calibration) |
 | M0 | Done: Stripe, GitHub and Kubernetes specs pinned by commit and SHA-256, licences checked (see `specs/README.md`) |
 
 The tests use a small fictional spec and a synthetic news stub; they are not linguistic results. Real results need the pipeline run on the real specs (`python specs/fetch.py`).

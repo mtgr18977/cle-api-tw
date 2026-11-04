@@ -124,3 +124,16 @@ def test_prune_reference_keeps_totals(tmp_path, nlp):
     assert b.count("surface", Cand("V+N", ("delete", "record"))) == 0
     assert b.total("surface") == a.total("surface")
     assert b.describe()["citation"] == "c" and b.describe()["min_count"] == 5
+
+
+@pytest.mark.parametrize("op_id,words", [
+    ("repos/list-for-org", ["list", "for", "org"]),                  # GitHub: group/verb-...
+    ("PostAccountLinks", []),                                        # Stripe: HTTP method prefix, no verb
+    ("GetAccounts", []),
+    ("listCoreV1ComponentStatus", ["list", "core", "component", "status"]),   # Kubernetes
+    ("getCoreAPIVersions", ["get", "core", "API", "versions"]),      # lower-case get IS a verb here
+    ("createAccessToken", ["create", "access", "token"]),
+])
+def test_operation_id_verb_conventions(op_id, words):
+    from apiterm.operations import operation_id_words
+    assert operation_id_words(op_id) == words

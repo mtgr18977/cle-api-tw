@@ -10,6 +10,28 @@ from .extract import TextItem
 from .triage import verb_class
 
 
+HTTP_WORDS = frozenset({"get", "post", "put", "patch", "delete", "head", "options", "trace"})
+
+
+def operation_id_words(op_id: str) -> list[str]:
+    """Words of an operationId whose first word is its verb; [] if it carries no verb.
+
+    Conventions seen in real specs:
+    * GitHub ``repos/list-for-org``: the verb is in the segment after the last ``/``
+      (the first segment is the API group).
+    * Stripe ``PostAccountLinks``: PascalCase with the HTTP method as prefix, which is not
+      a verb of the operation, so no verb is available.
+    * Kubernetes ``listCoreV1ComponentStatus``: camelCase, the first word is the verb.
+    """
+    seg = op_id.rsplit("/", 1)[-1]
+    words = split_identifier(seg)
+    if not words:
+        return []
+    if seg[:1].isupper() and words[0].lower() in HTTP_WORDS:
+        return []
+    return words
+
+
 def operation_verbs(items: Iterable[TextItem], nlp) -> list[dict]:
     """operationId -> (verb, object words). The first word is taken as the verb."""
     rows: Counter = Counter()
@@ -17,7 +39,7 @@ def operation_verbs(items: Iterable[TextItem], nlp) -> list[dict]:
     for it in items:
         if it.kind != "operationId":
             continue
-        words = split_identifier(it.text)
+        words = operation_id_words(it.text)
         if len(words) < 2:
             continue
         verb = _lemma(words[0], nlp)
@@ -78,8 +100,10 @@ def verb_agreement(items: Iterable[TextItem], annotated: list[AnnotatedText], nl
     for ctx, d in ops.items():
         if "operationId" not in d:
             continue
-        words = split_identifier(d["operationId"])
+        words = operation_id_words(d["operationId"])
         if not words:
+            rows.append({"operation": ctx, "operationId": d["operationId"], "id_verb": "",
+                         "doc_source": "", "doc_verb": "", "status": "no_id_verb"})
             continue
         id_verb = _lemma(words[0], nlp)
         src_kind = "summary" if "summary" in d else "description" if "description" in d else None
