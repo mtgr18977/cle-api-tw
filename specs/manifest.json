@@ -1,0 +1,38 @@
+{
+  "retrieved": "2026-11-04",
+  "specs": [
+    {
+      "name": "stripe",
+      "domain": "payments",
+      "repo": "stripe/openapi",
+      "commit": "3376b56a42f68e2b0a8ba5e9aad7cd4cbe8d2ae2",
+      "path": "latest/openapi.spec3.yaml",
+      "file": "stripe.yaml",
+      "sha256": "9f4af6778fa1e9a868da5a14c643a05de8528dfc3205645e2438955761c2680c",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2011- Stripe, Inc."
+    },
+    {
+      "name": "github",
+      "domain": "code hosting / versioning",
+      "repo": "github/rest-api-description",
+      "commit": "87267030f4b1cb33c3b076e4999f3da2e1290450",
+      "path": "descriptions/api.github.com/api.github.com.yaml",
+      "file": "github.yaml",
+      "sha256": "b9e7f117b98697ef4ed9431997e9aba7279f664617448c0d62789f33cb80500d",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2020 GitHub"
+    },
+    {
+      "name": "kubernetes",
+      "domain": "infrastructure",
+      "repo": "kubernetes/kubernetes",
+      "commit": "ca39c8c5a4aff9aec3a607b2e9311c38915266de",
+      "path": "api/openapi-spec/swagger.json",
+      "file": "kubernetes.json",
+      "sha256": "bc756a0d18f99c71e6cc65583dedec797bb6133847daf84559afe9dc77559aec",
+      "license": "Apache-2.0",
+      "copyright": "The Kubernetes Authors"
+    }
+  ]
+}
