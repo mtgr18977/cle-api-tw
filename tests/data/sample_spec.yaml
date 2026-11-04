@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: Acme Auth API
+  description: |
+    The Acme Auth API lets you **create** an access token, manage API keys and
+    authenticate with a token. See [the guide](https://example.com/guide).
+paths:
+  /tokens:
+    post:
+      operationId: createAccessToken
+      summary: Create an access token
+      description: Creates a new access token for the authenticated user. The access token expires after one hour.
+      parameters:
+        - name: client_id
+          in: query
+          description: The client identifier used to authenticate with the server.
+          schema: {type: string, example: "abc_123"}
+      responses:
+        "200":
+          description: Returns the access token.
+    get:
+      operationId: listAccessTokens
+      summary: List access tokens
+      description: Returns a list of access tokens. Use the page size parameter to limit the number of results.
+  /tokens/{id}:
+    get:
+      operationId: retrieveAccessToken
+      summary: Retrieve an access token
+      description: Retrieves the details of an access token.
+    delete:
+      operationId: revokeAccessToken
+      summary: Revoke an access token
+      description: Revokes an expired access token. Deleted tokens cannot be restored.
+  /tokens/generate:
+    post:
+      operationId: generateRefreshToken
+      summary: Generate a refresh token
+      description: Generates a refresh token. The refresh token can be used to create a new access token.
+  /tokens/issue:
+    post:
+      operationId: issueApiKey
+      summary: Issue an API key
+      description: Issues an API key for the account. Store the API key in a secure location.
+  /keys:
+    get:
+      operationId: listApiKeys
+      summary: List API keys
+      description: Returns a list of API keys. The list of scopes is attached to each API key.
+    post:
+      operationId: createApiKey
+      summary: Create an API key
+      description: Creates an API key for the account. Use `api_key` in the Authorization header.
+  /webhooks:
+    post:
+      operationId: createWebhookEndpoint
+      summary: Create a webhook endpoint
+      description: Creates a webhook endpoint. The endpoint receives an event notification for each event.
+    get:
+      operationId: listWebhookEndpoints
+      summary: List webhook endpoints
+      description: Returns a list of webhook endpoints.
+  /webhooks/{id}:
+    delete:
+      operationId: deleteWebhookEndpoint
+      summary: Delete a webhook endpoint
+      description: Deletes a webhook endpoint. A deleted endpoint stops receiving event notifications.
+components:
+  schemas:
+    AccessToken:
+      title: Access token
+      description: An access token grants access to the API on behalf of a user.
+      type: object
+      properties:
+        token_type:
+          type: string
+          description: The type of the access token.
+        expires_in:
+          type: integer
+          description: The lifetime of the access token in seconds.
+        refresh_token:
+          type: string
+          description: The refresh token that can be used to create a new access token.
+    ApiKey:
+      title: API key
+      description: An API key identifies the account that makes the request.
+      type: object
+      properties:
+        key_id: {type: string, description: The identifier of the API key.}
+        scopes:
+          type: array
+          description: The list of scopes granted to the API key.
+          items: {type: string, enum: [read, write]}
+    WebhookEndpoint:
+      title: Webhook endpoint
+      description: A webhook endpoint receives an event notification.
+      type: object
+      properties:
+        url: {type: string, description: The URL of the webhook endpoint.}
