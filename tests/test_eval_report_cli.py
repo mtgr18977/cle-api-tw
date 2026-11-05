@@ -89,3 +89,18 @@ def test_report_without_reference(tmp_path, sample_spec, nlp):
     write_outputs(analyze(sample_spec, None, nlp), tmp_path)
     p = render_report(tmp_path, tmp_path / "r.html")
     assert "no reference" in p.read_text().lower() or "No reference" in p.read_text()
+
+
+def test_agreement_kappa():
+    from apiterm.evaluation import agreement
+    a = [{"id": i, "label": l} for i, l in enumerate(["cle", "cle", "not", "not", "generic", "not"], 1)]
+    same = agreement(a, a)
+    assert same["kappa_4_labels"] == 1.0 and same["raw_agreement"] == 1.0 and same["n_common"] == 6
+    b = [dict(r) for r in a]
+    b[0]["label"] = "not"                                  # one disagreement
+    r = agreement(a, b)
+    assert r["raw_agreement"] == pytest.approx(5 / 6, abs=1e-3) and 0 < r["kappa_4_labels"] < 1
+    assert r["confusion_a_to_b"]["cle->not"] == 1
+    # unlabelled rows are ignored
+    c = [{"id": 1, "label": ""}, {"id": 2, "label": "cle"}]
+    assert agreement(a, c)["n_common"] == 1

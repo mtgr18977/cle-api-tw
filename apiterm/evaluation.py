@@ -153,3 +153,32 @@ def evaluate(sample: list[dict], key: list[dict], top_ks: tuple[int, ...] = (5, 
     return {"annotated_total": len(ann), "of": len(sample), "per_stratum": strata,
             "per_tier_weighted": per_tier, "precision_at_k": p_at_k,
             "by_surface_membership": by_surface}
+
+
+def agreement(a: list[dict], b: list[dict]) -> dict:
+    """Agreement between two annotators on the ids both labelled (Cohen's kappa).
+
+    Reported on the four labels and on the collapsed ``cle`` vs. everything else.
+    """
+    la = {int(r["id"]): LABELS.get((r.get("label") or "").strip().lower()) for r in a}
+    lb = {int(r["id"]): LABELS.get((r.get("label") or "").strip().lower()) for r in b}
+    ids = sorted(i for i in la if la[i] and lb.get(i))
+
+    def kappa(xs, ys):
+        n = len(xs)
+        if n == 0:
+            return None
+        po = sum(x == y for x, y in zip(xs, ys)) / n
+        cats = set(xs) | set(ys)
+        pe = sum((xs.count(c) / n) * (ys.count(c) / n) for c in cats)
+        return round((po - pe) / (1 - pe), 3) if pe < 1 else 1.0
+
+    xs, ys = [la[i] for i in ids], [lb[i] for i in ids]
+    bx, by = [x == "cle" for x in xs], [y == "cle" for y in ys]
+    confusion: dict[str, int] = defaultdict(int)
+    for x, y in zip(xs, ys):
+        confusion[f"{x}->{y}"] += 1
+    return {"n_common": len(ids),
+            "raw_agreement": round(sum(x == y for x, y in zip(xs, ys)) / len(ids), 3) if ids else None,
+            "kappa_4_labels": kappa(xs, ys), "kappa_cle_vs_rest": kappa(bx, by),
+            "confusion_a_to_b": dict(sorted(confusion.items()))}

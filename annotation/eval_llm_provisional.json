@@ -1,0 +1,312 @@
+{
+  "annotated_total": 300,
+  "of": 300,
+  "per_stratum": {
+    "github/general_noise": {
+      "annotated": 5,
+      "cle": 0,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 3,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.4,
+      "precision_lenient": 0.4
+    },
+    "github/negative": {
+      "annotated": 10,
+      "cle": 1,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 8,
+      "precision_strict": 0.1,
+      "precision_with_generic": 0.2,
+      "precision_lenient": 0.2
+    },
+    "github/surface_only": {
+      "annotated": 10,
+      "cle": 1,
+      "generic": 0,
+      "doubtful": 1,
+      "not": 8,
+      "precision_strict": 0.1,
+      "precision_with_generic": 0.1,
+      "precision_lenient": 0.2
+    },
+    "github/tier1_high": {
+      "annotated": 10,
+      "cle": 1,
+      "generic": 6,
+      "doubtful": 0,
+      "not": 3,
+      "precision_strict": 0.1,
+      "precision_with_generic": 0.7,
+      "precision_lenient": 0.7
+    },
+    "github/tier1_mid": {
+      "annotated": 15,
+      "cle": 2,
+      "generic": 4,
+      "doubtful": 0,
+      "not": 9,
+      "precision_strict": 0.133,
+      "precision_with_generic": 0.4,
+      "precision_lenient": 0.4
+    },
+    "github/tier2_hi": {
+      "annotated": 15,
+      "cle": 2,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 12,
+      "precision_strict": 0.133,
+      "precision_with_generic": 0.2,
+      "precision_lenient": 0.2
+    },
+    "github/tier2_lo": {
+      "annotated": 15,
+      "cle": 0,
+      "generic": 4,
+      "doubtful": 0,
+      "not": 11,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.267,
+      "precision_lenient": 0.267
+    },
+    "github/top": {
+      "annotated": 20,
+      "cle": 10,
+      "generic": 6,
+      "doubtful": 0,
+      "not": 4,
+      "precision_strict": 0.5,
+      "precision_with_generic": 0.8,
+      "precision_lenient": 0.8
+    },
+    "kubernetes/general_noise": {
+      "annotated": 5,
+      "cle": 0,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 3,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.4,
+      "precision_lenient": 0.4
+    },
+    "kubernetes/negative": {
+      "annotated": 10,
+      "cle": 0,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 8,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.2,
+      "precision_lenient": 0.2
+    },
+    "kubernetes/surface_only": {
+      "annotated": 10,
+      "cle": 0,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 9,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.1,
+      "precision_lenient": 0.1
+    },
+    "kubernetes/tier1_high": {
+      "annotated": 10,
+      "cle": 6,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 2,
+      "precision_strict": 0.6,
+      "precision_with_generic": 0.8,
+      "precision_lenient": 0.8
+    },
+    "kubernetes/tier1_mid": {
+      "annotated": 15,
+      "cle": 6,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 7,
+      "precision_strict": 0.4,
+      "precision_with_generic": 0.533,
+      "precision_lenient": 0.533
+    },
+    "kubernetes/tier2_hi": {
+      "annotated": 15,
+      "cle": 3,
+      "generic": 3,
+      "doubtful": 0,
+      "not": 9,
+      "precision_strict": 0.2,
+      "precision_with_generic": 0.4,
+      "precision_lenient": 0.4
+    },
+    "kubernetes/tier2_lo": {
+      "annotated": 15,
+      "cle": 1,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 13,
+      "precision_strict": 0.067,
+      "precision_with_generic": 0.133,
+      "precision_lenient": 0.133
+    },
+    "kubernetes/top": {
+      "annotated": 20,
+      "cle": 6,
+      "generic": 4,
+      "doubtful": 0,
+      "not": 10,
+      "precision_strict": 0.3,
+      "precision_with_generic": 0.5,
+      "precision_lenient": 0.5
+    },
+    "stripe/general_noise": {
+      "annotated": 5,
+      "cle": 0,
+      "generic": 4,
+      "doubtful": 0,
+      "not": 1,
+      "precision_strict": 0.0,
+      "precision_with_generic": 0.8,
+      "precision_lenient": 0.8
+    },
+    "stripe/negative": {
+      "annotated": 10,
+      "cle": 1,
+      "generic": 1,
+      "doubtful": 1,
+      "not": 7,
+      "precision_strict": 0.1,
+      "precision_with_generic": 0.2,
+      "precision_lenient": 0.3
+    },
+    "stripe/surface_only": {
+      "annotated": 10,
+      "cle": 1,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 7,
+      "precision_strict": 0.1,
+      "precision_with_generic": 0.3,
+      "precision_lenient": 0.3
+    },
+    "stripe/tier1_high": {
+      "annotated": 10,
+      "cle": 4,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 5,
+      "precision_strict": 0.4,
+      "precision_with_generic": 0.5,
+      "precision_lenient": 0.5
+    },
+    "stripe/tier1_mid": {
+      "annotated": 15,
+      "cle": 2,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 11,
+      "precision_strict": 0.133,
+      "precision_with_generic": 0.267,
+      "precision_lenient": 0.267
+    },
+    "stripe/tier2_hi": {
+      "annotated": 15,
+      "cle": 2,
+      "generic": 2,
+      "doubtful": 0,
+      "not": 11,
+      "precision_strict": 0.133,
+      "precision_with_generic": 0.267,
+      "precision_lenient": 0.267
+    },
+    "stripe/tier2_lo": {
+      "annotated": 15,
+      "cle": 4,
+      "generic": 1,
+      "doubtful": 0,
+      "not": 10,
+      "precision_strict": 0.267,
+      "precision_with_generic": 0.333,
+      "precision_lenient": 0.333
+    },
+    "stripe/top": {
+      "annotated": 20,
+      "cle": 14,
+      "generic": 3,
+      "doubtful": 1,
+      "not": 2,
+      "precision_strict": 0.7,
+      "precision_with_generic": 0.85,
+      "precision_lenient": 0.9
+    }
+  },
+  "per_tier_weighted": {
+    "1": {
+      "n_annotated": 135,
+      "weighted_precision_strict": 0.237,
+      "weighted_precision_with_generic": 0.484
+    },
+    "2": {
+      "n_annotated": 90,
+      "weighted_precision_strict": 0.118,
+      "weighted_precision_with_generic": 0.253
+    },
+    "general": {
+      "n_annotated": 1,
+      "weighted_precision_strict": 0.0,
+      "weighted_precision_with_generic": 1.0
+    },
+    "negative": {
+      "n_annotated": 30,
+      "weighted_precision_strict": 0.069,
+      "weighted_precision_with_generic": 0.2
+    },
+    "noise": {
+      "n_annotated": 14,
+      "weighted_precision_strict": 0.0,
+      "weighted_precision_with_generic": 0.557
+    }
+  },
+  "precision_at_k": {
+    "github": {
+      "5": 0.2,
+      "10": 0.5,
+      "20": 0.5
+    },
+    "kubernetes": {
+      "5": 0.2,
+      "10": 0.1,
+      "20": 0.3
+    },
+    "stripe": {
+      "5": 0.8,
+      "10": 0.7,
+      "20": 0.7
+    }
+  },
+  "by_surface_membership": {
+    "in_surface=True": {
+      "annotated": 207,
+      "cle": 65,
+      "generic": 47,
+      "doubtful": 2,
+      "not": 93,
+      "precision_strict": 0.314,
+      "precision_with_generic": 0.541,
+      "precision_lenient": 0.551
+    },
+    "in_surface=False": {
+      "annotated": 93,
+      "cle": 2,
+      "generic": 10,
+      "doubtful": 1,
+      "not": 80,
+      "precision_strict": 0.022,
+      "precision_with_generic": 0.129,
+      "precision_lenient": 0.14
+    }
+  }
+}

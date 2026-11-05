@@ -71,6 +71,12 @@ def _cmd_evaluate(a) -> int:
     return 0
 
 
+def _cmd_agree(a) -> int:
+    from .evaluation import agreement, read_csv
+    print(json.dumps(agreement(read_csv(a.a), read_csv(a.b)), indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="apiterm", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -118,6 +124,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("annotated")
     s.add_argument("--key", default="annotation/annotation_key.csv")
     s.set_defaults(fn=_cmd_evaluate)
+
+    s = sub.add_parser("agree", help="Cohen's kappa between two annotated files (matched by id)")
+    s.add_argument("a")
+    s.add_argument("b")
+    s.set_defaults(fn=_cmd_agree)
 
     a = p.parse_args(argv)
     try:

@@ -40,3 +40,19 @@ strict (`cle` only) and with `generic`.
 ## Optional
 
 A second annotator on ~10% of the rows (any 30 ids) would let us report agreement (Cohen's kappa).
+
+## LLM pre-annotation (provisional)
+
+At your request I (Claude) annotated all 300 rows **blind** (before opening `annotation_key.csv`) using the guide above:
+`annotation_llm.csv` (labels 67 cle, 57 generic, 173 not, 3 doubtful; notes prefixed `[LLM]`) and the evaluation in
+`eval_llm_provisional.json`. `annotation_sample.csv` is still empty for you.
+
+This is **not a gold standard**: one annotator, the same one that helped define the rules, and no domain expertise
+beyond what the examples show. Thresholds calibrated on it would measure agreement with me, not truth.
+The cheapest way to find out how far to trust it:
+
+1. Annotate `annotation_review60.csv` (60 random rows of the 300, about 25 minutes) without looking at `annotation_llm.csv`.
+2. Run `python -m apiterm agree annotation/annotation_review60.csv annotation/annotation_llm.csv`.
+   Cohen's kappa on `cle` vs. the rest tells us whether my labels are usable; the confusion counts show where we differ
+   (probably `generic` and the partial terms).
+3. Use your labels on those 60 to correct mine, or annotate more if the kappa is low.
