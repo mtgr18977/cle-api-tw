@@ -4,37 +4,68 @@ import json
 import pytest
 
 from apiterm.cli import main
-from apiterm.evaluation import evaluate, make_sample
 from apiterm.report import render_report
 
 
-def fake_rows(n=120):
-    tiers = ["1"] * 30 + ["2"] * 20 + ["general"] * 30 + ["noise"] * 40
-    return [{"rank": str(i + 1), "tier": tiers[i], "pattern": "N+N", "candidate": f"w{i} x", "freq": "5",
-             "contexts": "2", "t_score": "2.5", "log_likelihood": "9", "example": "e"} for i in range(n)]
+def fake_api(n_main=200):
+    rows = []
+    for i in range(n_main):
+        tier = "1" if i < 60 else "2" if i < 160 else "noise"
+        freq = 12 if i < 40 else 5 if i < 100 else 2
+        rows.append({"rank": str(i + 1), "tier": tier, "pattern": "N+N", "candidate": f"a{i} b{i}",
+                     "freq": str(freq), "t_score": "2.5", "log_likelihood": "9", "example": f"ex {i}"})
+    neg = [{"rank": "", "tier": "negative", "pattern": "N+N", "candidate": f"n{i} x", "freq": "1",
+            "t_score": "0.5", "log_likelihood": "5", "example": "e"} for i in range(40)]
+    surf = rows[:50] + [{"rank": str(900 + i), "tier": "2", "pattern": "V+N", "candidate": f"s{i} y", "freq": "3",
+                         "t_score": "1.0", "log_likelihood": "6", "example": "e"} for i in range(30)]
+    return {"main": rows, "negatives": neg, "surface": surf}
 
 
-def test_sample_is_stratified_seeded_and_contains_topk():
-    a = make_sample(fake_rows(), n=60, seed=1, top_k=20)
-    b = make_sample(fake_rows(), n=60, seed=1, top_k=20)
-    assert a == b and 55 <= len(a) <= 66
-    assert [int(r["rank"]) for r in a[:20]] == list(range(1, 21))
-    assert {r["tier"] for r in a} == {"1", "2", "general", "noise"}
-    assert all(r["label"] == "" for r in a)
+def test_sample_is_blind_shuffled_seeded_and_stratified():
+    from apiterm.evaluation import make_sample
+    apis = {"x": fake_api(), "y": fake_api()}
+    s1, k1 = make_sample(apis, seed=1)
+    s2, k2 = make_sample(apis, seed=1)
+    assert s1 == s2 and k1 == k2
+    assert set(s1[0]) == {"id", "api", "pattern", "candidate", "example", "label", "note"}   # blind
+    assert all(r["label"] == "" for r in s1)
+    strata = {(k["api"], k["stratum"]) for k in k1}
+    assert len(strata) == 2 * 8
+    assert [int(r["rank"]) for r in k1 if r["api"] == "x" and r["stratum"] == "top"].__len__() == 20
+    w = next(k for k in k1 if k["stratum"] == "tier2_lo" and k["api"] == "x")
+    assert float(w["weight"]) == pytest.approx(int(w["population"]) / int(w["sampled"]))
+    assert all(k["in_surface"] is True for k in k1 if k["stratum"] == "top" and int(k["rank"]) <= 20)
+    ids = [r["id"] for r in s1]
+    assert ids == list(range(1, len(ids) + 1)) and [r["api"] for r in s1[:12]] != ["x"] * 12   # shuffled
 
 
-def test_evaluate_precision_per_tier_and_at_k():
-    rows = make_sample(fake_rows(), n=60, seed=1, top_k=20)
-    for r in rows:
-        r["label"] = {"1": "cle", "2": "doubtful", "general": "not", "noise": "not"}[r["tier"]]
-    for r in rows[:5]:
-        r["label"] = "not"                                  # 5 errors in the top 5 (all tier 1)
-    ev = evaluate(rows)
-    t1 = ev["per_tier"]["1"]
-    assert t1["precision_strict"] == pytest.approx(t1["cle"] / t1["annotated"])
-    assert ev["per_tier"]["2"]["precision_strict"] == 0 and ev["per_tier"]["2"]["precision_lenient"] == 1
-    assert ev["precision_at_k"][10] == 0.5 and ev["precision_at_k"][20] == pytest.approx(15 / 20)
-    assert ev["precision_at_k"][50] is None                # top 50 not fully annotated
+def test_evaluate_weighted_precision_and_p_at_k():
+    from apiterm.evaluation import evaluate, make_sample
+    sample, key = make_sample({"x": fake_api()}, seed=1)
+    kmap = {int(k["id"]): k for k in key}
+    for r in sample:
+        k = kmap[int(r["id"])]
+        r["label"] = {"1": "cle", "2": "not", "noise": "not", "negative": "not"}[k["tier"]]
+    top = sorted((k for k in key if k["stratum"] == "top"), key=lambda k: int(k["rank"]))
+    for k in top[:2]:                                         # two errors in the top 5 positions
+        next(r for r in sample if int(r["id"]) == int(k["id"]))["label"] = "generic"
+    ev = evaluate(sample, key)
+    assert ev["annotated_total"] == len(sample)
+    assert ev["per_tier_weighted"]["1"]["weighted_precision_strict"] < 1.0
+    assert ev["per_tier_weighted"]["2"]["weighted_precision_strict"] == 0.0
+    assert ev["per_tier_weighted"]["1"]["weighted_precision_with_generic"] == 1.0
+    assert ev["precision_at_k"]["x"][5] == pytest.approx(3 / 5)
+    assert ev["precision_at_k"]["x"][20] == pytest.approx(18 / 20)
+    assert "x/tier2_lo" in ev["per_stratum"]
+
+
+def test_evaluate_ignores_unlabelled_rows():
+    from apiterm.evaluation import evaluate, make_sample
+    sample, key = make_sample({"x": fake_api()}, seed=1)
+    sample[0]["label"] = "cle"
+    ev = evaluate(sample, key)
+    assert ev["annotated_total"] == 1 and ev["of"] == len(sample)
+    assert ev["precision_at_k"] == {"x": {5: None, 10: None, 20: None}}   # top ranks not annotated
 
 
 def test_cli_end_to_end_and_report(tmp_path, capsys, sample_spec, reference_db):
@@ -47,8 +78,9 @@ def test_cli_end_to_end_and_report(tmp_path, capsys, sample_spec, reference_db):
     page = html.read_text()
     assert "<svg" in page and "T &lt;x&gt;" in page and "Verb variation" in page
     assert "http://" not in page.replace("http://www.w3.org/2000/svg", "")   # no external assets
-    assert main(["sample", str(out), "--n", "30", "--top-k", "5"]) == 0
-    assert (out / "annotation_sample_surface.csv").exists()
+    ann = tmp_path / "ann"
+    assert main(["sample", str(out), "--out", str(ann)]) == 0
+    assert (ann / "annotation_sample.csv").exists() and (ann / "annotation_key.csv").exists()
     assert main(["analyze", str(tmp_path / "missing.yaml")]) == 1
 
 

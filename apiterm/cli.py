@@ -47,18 +47,27 @@ def _cmd_report(a) -> int:
 
 
 def _cmd_sample(a) -> int:
-    from .evaluation import make_sample, read_csv, write_csv
-    rows = read_csv(Path(a.out_dir) / f"candidates_{a.method}.csv")
-    sample = make_sample(rows, a.n, a.seed, a.top_k)
-    path = Path(a.out_dir) / f"annotation_sample_{a.method}.csv"
-    write_csv(sample, path)
-    print(f"Wrote {len(sample)} rows to {path}. Fill the 'label' column: cle / not / doubtful.")
+    from .evaluation import KEY_COLS, SAMPLE_COLS, make_sample, read_csv, write_csv
+    apis = {}
+    for d in a.out_dirs:
+        d = Path(d)
+        apis[d.name] = {"main": read_csv(d / "candidates_dependency.csv"),
+                        "negatives": read_csv(d / "negatives_dependency.csv"),
+                        "surface": read_csv(d / "candidates_surface.csv")}
+    sample, key = make_sample(apis, a.seed)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    write_csv(sample, out / "annotation_sample.csv", SAMPLE_COLS)
+    write_csv(key, out / "annotation_key.csv", KEY_COLS)
+    print(f"Wrote {len(sample)} candidates to {out}/annotation_sample.csv (blind) and annotation_key.csv.")
+    print("Fill 'label' with: cle / generic / not / doubtful. See annotation/GUIDELINES.md.")
     return 0
 
 
 def _cmd_evaluate(a) -> int:
     from .evaluation import evaluate, read_csv
-    print(json.dumps(evaluate(read_csv(a.annotated)), indent=2))
+    key = read_csv(a.key)
+    print(json.dumps(evaluate(read_csv(a.annotated), key), indent=2))
     return 0
 
 
@@ -99,16 +108,15 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--method", default="dependency", choices=["surface", "dependency"])
     s.set_defaults(fn=_cmd_report)
 
-    s = sub.add_parser("sample", help="write a stratified sample for manual annotation")
-    s.add_argument("out_dir")
-    s.add_argument("--method", default="surface", choices=["surface", "dependency"])
-    s.add_argument("--n", type=int, default=200)
-    s.add_argument("--top-k", type=int, default=50)
+    s = sub.add_parser("sample", help="write the blind, stratified annotation sample (3 APIs)")
+    s.add_argument("out_dirs", nargs="+", help="analyze output dirs, one per API (dir name = API name)")
+    s.add_argument("--out", default="annotation")
     s.add_argument("--seed", type=int, default=13)
     s.set_defaults(fn=_cmd_sample)
 
-    s = sub.add_parser("evaluate", help="precision per tier and precision@k from an annotated sample")
+    s = sub.add_parser("evaluate", help="precision per stratum/tier and precision@k from an annotated sample")
     s.add_argument("annotated")
+    s.add_argument("--key", default="annotation/annotation_key.csv")
     s.set_defaults(fn=_cmd_evaluate)
 
     a = p.parse_args(argv)
