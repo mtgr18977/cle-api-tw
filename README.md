@@ -23,6 +23,18 @@ APITERM_REFERENCE=reference/data/ccnews_en_min5.db uvicorn app.main:app         
 Without `--reference` only cohesion (t-score) is computed and there is no 3-tier triage.
 The webapp processes uploads in memory only; nothing is saved or logged.
 
+## Analysis site (`site/`)
+
+A static, dependency-free page (tables, charts, explorer, scatter, verb variation, provisional annotation) built from the
+`analyze` outputs and published by Netlify (`netlify.toml`, publish dir `site`, no build step).
+
+```bash
+python -m apiterm site out/stripe out/github out/kubernetes      # regenerates site/data/*.js
+python -m http.server -d site 8000                              # or just open site/index.html
+```
+
+The provisional LLM labels are hidden in the UI until you tick "Reveal" (they are still in `site/data/annotation.js`).
+
 ## Pipeline (`apiterm/`)
 
 | Module | Plan step |
@@ -36,6 +48,7 @@ The webapp processes uploads in memory only; nothing is saved or logged.
 | `operations.py` | operationId verbs, name terms, operationId-vs-description verb agreement |
 | `reference.py` | reference counts table (SQLite), builder and pruner |
 | `evaluation.py` | stratified annotation sample, precision per tier and precision@k |
+| `site.py`, `site/` | data files and static page for the three-API analysis |
 | `report.py`, `app/` | static report (M7), webapp (M8) |
 
 Thresholds: t ≥ 2 (needs freq ≥ 4, since t ≤ √c) and log-likelihood ≥ 3.84; both configurable and meant to be calibrated.
