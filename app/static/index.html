@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APITerm</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#56b4e9;--ok:#3fb950;--bad:#f85149;--rev:#e69f00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}h1{margin:.2em 0}h2{margin-top:1.6em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
+.priv{border-left:3px solid var(--ok)}.mut{color:var(--mut)}
+button,select,input{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit}
+button{cursor:pointer}button.p{background:var(--acc);color:#04141f;border-color:var(--acc)}
+button.on{outline:2px solid var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{color:var(--mut);cursor:pointer;white-space:nowrap}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.t1{color:var(--acc)}.t2{color:var(--rev)}.ex{color:var(--mut);max-width:340px;font-size:.8rem}
+.a{color:var(--ok)}.r{color:var(--bad)}.v{color:var(--rev)}
+</style>
+</head>
+<body>
+<main>
+<h1>APITerm</h1>
+<p class="mut">Terminology candidates (verb + noun, noun + noun, adjective + noun…) from an OpenAPI file.</p>
+<div class="card priv"><b>Privacy.</b> Your file is processed in memory on the server. It is not saved and its content is not logged.</div>
+
+<div class="card">
+  <div class="row">
+    <input type="file" id="file" accept=".yaml,.yml,.json">
+    <label>Method <select id="method"><option value="dependency">dependencies</option><option value="surface">surface patterns</option></select></label>
+    <label>Min. frequency <input id="minfreq" type="number" min="1" value="2" style="width:70px"></label>
+    <button class="p" id="go">Analyse</button>
+  </div>
+  <div id="status" class="mut"></div>
+</div>
+
+<div id="out" hidden>
+  <div class="card" id="sum"></div>
+  <h2>Candidates</h2>
+  <div class="row">
+    <input id="q" placeholder="filter text…">
+    <select id="fpat"><option value="">all patterns</option></select>
+    <select id="ftier"><option value="">all tiers</option></select>
+    <select id="fmark"><option value="">any mark</option><option value="accepted">accepted</option><option value="rejected">rejected</option><option value="review">review</option><option value="none">unmarked</option></select>
+    <span class="mut" id="count"></span>
+    <button id="csv">Export glossary (CSV)</button><button id="json">Export (JSON)</button>
+  </div>
+  <div class="wrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+  <h2>Verb variation</h2>
+  <p class="mut">Nouns combined with two or more verbs. "Class" is a heuristic flag for review.</p>
+  <div class="wrap"><table id="var"><thead></thead><tbody></tbody></table></div>
+</div>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let DATA = null, marks = new Map(), sortKey = "rank", sortDir = 1;
+const COLS = [["rank","#"],["candidate","Candidate"],["pattern","Pattern"],["freq","Freq"],["raw_freq","Raw"],
+  ["contexts","Contexts"],["t_score","t-score"],["log_likelihood","LL"],["tier_label","Tier"],["example","Example"],["mark","Mark"]];
+
+function el(tag, text, cls){ const e = document.createElement(tag); if(text!==undefined) e.textContent = text; if(cls) e.className = cls; return e; }
+
+async function init(){
+  try{ const s = await (await fetch("/api/status")).json();
+    $("status").textContent = s.reference ? "Reference: "+s.reference.source+" ("+s.reference.texts+" texts)"
+      : "No reference corpus configured: only cohesion (t-score) is available, no 3-tier triage."; }catch(e){}
+}
+$("go").onclick = async () => {
+  const f = $("file").files[0]; if(!f){ $("status").textContent = "Choose a file first."; return; }
+  const fd = new FormData(); fd.append("file", f); fd.append("method", $("method").value); fd.append("min_freq", $("minfreq").value);
+  $("status").textContent = "Analysing…"; $("go").disabled = true;
+  try{
+    const r = await fetch("/api/analyze", {method:"POST", body:fd});
+    const j = await r.json(); if(!r.ok) throw new Error(j.detail || r.statusText);
+    DATA = j; marks = new Map(); render(); $("status").textContent = "Done.";
+  }catch(e){ $("status").textContent = "Error: "+e.message; } finally { $("go").disabled = false; }
+};
+
+function fill(sel, vals){ sel.length = 1; vals.forEach(v => { const o = el("option", v); o.value = v; sel.append(o); }); }
+function render(){
+  $("out").hidden = false;
+  const s = DATA.summary, m = Object.values(s.methods)[0], sum = $("sum"); sum.replaceChildren();
+  [["Texts", s.dedup.items_before+" → "+s.dedup.items_after+" unique"],["Candidates", m.main_list],
+   ["Tier 1", m.by_tier["1"]||0],["Below min. frequency", m.negative_set]].forEach(([k,v]) => {
+    const d = el("span", k+": "); d.append(el("b", String(v))); d.style.marginRight = "22px"; sum.append(d); });
+  fill($("fpat"), [...new Set(DATA.candidates.map(c => c.pattern))]);
+  fill($("ftier"), [...new Set(DATA.candidates.map(c => c.tier_label))]);
+  const th = $("tbl").tHead; th.replaceChildren(); const tr = el("tr");
+  COLS.forEach(([k,l]) => { const h = el("th", l); h.onclick = () => { if(k==="mark") return; sortDir = sortKey===k ? -sortDir : 1; sortKey = k; draw(); }; tr.append(h); });
+  th.append(tr); draw(); drawVar();
+}
+function draw(){
+  const q = $("q").value.toLowerCase(), fp = $("fpat").value, ft = $("ftier").value, fm = $("fmark").value;
+  let rows = DATA.candidates.filter(c => (!q || c.candidate.toLowerCase().includes(q)) && (!fp || c.pattern===fp) && (!ft || c.tier_label===ft)
+     && (!fm || (fm==="none" ? !marks.has(c.rank) : marks.get(c.rank)===fm)));
+  rows.sort((a,b) => { const x=a[sortKey], y=b[sortKey]; return (x===y?0:(x==null?1:y==null?-1:x<y?-1:1))*sortDir; });
+  $("count").textContent = rows.length+" shown";
+  const tb = $("tbl").tBodies[0]; tb.replaceChildren();
+  rows.slice(0,1000).forEach(c => {
+    const tr = el("tr");
+    COLS.forEach(([k]) => {
+      let td;
+      if(k==="mark"){ td = el("td"); [["accepted","✓","a"],["rejected","✗","r"],["review","?","v"]].forEach(([val,sym,cls]) => {
+          const b = el("button", sym, cls); if(marks.get(c.rank)===val) b.classList.add("on");
+          b.title = val; b.onclick = () => { marks.get(c.rank)===val ? marks.delete(c.rank) : marks.set(c.rank,val); draw(); }; td.append(b); }); }
+      else { const v = c[k]; td = el("td", v==null ? "–" : String(v), ["freq","raw_freq","contexts","t_score","log_likelihood","rank"].includes(k) ? "n" : k==="example" ? "ex" : (k==="tier_label" ? "t"+c.tier : "")); }
+      tr.append(td);
+    });
+    tb.append(tr);
+  });
+}
+function drawVar(){
+  const t = $("var"), h = t.tHead; h.replaceChildren(); const tr = el("tr");
+  ["Noun","Verbs : frequency","Class","Suggested","Total"].forEach(x => tr.append(el("th", x))); h.append(tr);
+  const tb = t.tBodies[0]; tb.replaceChildren();
+  DATA.variation.slice(0,200).forEach(v => { const r = el("tr");
+    [v.noun, v.verbs, v.equivalent_class||"–", v.suggested_preferred||"–", v.total_freq].forEach(x => r.append(el("td", String(x)))); tb.append(r); });
+}
+["q","fpat","ftier","fmark"].forEach(id => $(id).addEventListener("input", draw));
+
+function download(name, type, text){ const a = el("a"); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
+function accepted(){ return DATA.candidates.filter(c => marks.get(c.rank)==="accepted").map(c => ({term:c.candidate, pattern:c.pattern, status:marks.get(c.rank), freq:c.freq, contexts:c.contexts, example:c.example})); }
+const esc = v => { let s = String(v ?? ""); if(/^[=+\-@\t\r]/.test(s)) s = "'"+s; return '"'+s.replace(/"/g,'""')+'"'; };   // also blocks CSV formula injection
+$("csv").onclick = () => { const r = accepted(); const k = ["term","pattern","status","freq","contexts","example"];
+  download("glossary.csv","text/csv", [k.join(",")].concat(r.map(x => k.map(c => esc(x[c])).join(","))).join("\n")); };
+$("json").onclick = () => download("glossary.json","application/json", JSON.stringify(accepted(), null, 2));
+init();
+</script>
+</body>
+</html>

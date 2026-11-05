@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+out/
+# reference tables (*.db under reference/data) are published on purpose
+/*.db
+out/*.db
+reference/data/*.jsonl
+reference/data/*.txt
+reference/data/*.log
+reference/data/*_full.db
+specs/data/

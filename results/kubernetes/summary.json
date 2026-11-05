@@ -1,0 +1,116 @@
+{
+  "items_total": 15321,
+  "items_by_kind": {
+    "description": 9383,
+    "property": 3295,
+    "title": 1,
+    "parameter": 1470,
+    "operationId": 1172
+  },
+  "dedup": {
+    "items_before": 9384,
+    "items_after": 3711,
+    "removed": 5673,
+    "chars_before": 1427033,
+    "chars_after": 629527
+  },
+  "thresholds": {
+    "min_freq": 2,
+    "t_min": 2.0,
+    "ll_min": 3.84
+  },
+  "reference": {
+    "path": "ccnews_en_min5.db",
+    "source": "CC-News en sample 2019-2021, 30k articles/year (stanford-oval/ccnews)",
+    "citation": "Hamborg et al. 2017, news-please, doi:10.5281/zenodo.4120316",
+    "min_count": 5,
+    "texts": 89991,
+    "total_surface": 6666698,
+    "total_dependency": 9366011
+  },
+  "methods": {
+    "surface": {
+      "tokens_dedup": 91828,
+      "tokens_raw": 214203,
+      "candidate_occurrences": 14926,
+      "distinct_candidates": 7016,
+      "main_list": 2553,
+      "negative_set": 4463,
+      "by_pattern": {
+        "V+N": 661,
+        "V+Prep+N": 306,
+        "N+N": 809,
+        "Adj+N": 472,
+        "N+of+N": 305
+      },
+      "by_tier": {
+        "1": 474,
+        "2": 2065,
+        "general": 1,
+        "noise": 13
+      },
+      "by_pattern_tier1": {
+        "V+N": 107,
+        "V+Prep+N": 46,
+        "N+N": 184,
+        "Adj+N": 94,
+        "N+of+N": 43
+      },
+      "variation_groups": 150,
+      "variation_equivalent": 5
+    },
+    "dependency": {
+      "tokens_dedup": 91828,
+      "tokens_raw": 214203,
+      "candidate_occurrences": 20529,
+      "distinct_candidates": 9634,
+      "main_list": 3412,
+      "negative_set": 6222,
+      "by_pattern": {
+        "V+N": 1067,
+        "V+Prep+N": 521,
+        "N+N": 782,
+        "Adj+N": 662,
+        "N+of+N": 380
+      },
+      "by_tier": {
+        "1": 653,
+        "2": 2733,
+        "general": 3,
+        "noise": 23
+      },
+      "by_pattern_tier1": {
+        "V+N": 191,
+        "V+Prep+N": 87,
+        "N+N": 176,
+        "Adj+N": 129,
+        "N+of+N": 70
+      },
+      "variation_groups": 221,
+      "variation_equivalent": 17
+    }
+  },
+  "method_overlap": {
+    "main_list": {
+      "a_only": 342,
+      "b_only": 1201,
+      "both": 2211,
+      "jaccard": 0.589
+    },
+    "tier1": {
+      "a_only": 61,
+      "b_only": 240,
+      "both": 413,
+      "jaccard": 0.578
+    },
+    "labels": [
+      "surface",
+      "dependency"
+    ]
+  },
+  "verb_agreement": {
+    "same": 805,
+    "different": 279,
+    "no_verb": 88
+  }
+}
