@@ -1,0 +1,17 @@
+# Static analysis site: no build step. The data files in site/data are generated with
+#   python -m apiterm site out/stripe out/github out/kubernetes
+# and committed, so Netlify only publishes the folder.
+[build]
+  publish = "site"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

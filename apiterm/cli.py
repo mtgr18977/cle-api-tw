@@ -71,6 +71,14 @@ def _cmd_evaluate(a) -> int:
     return 0
 
 
+def _cmd_site(a) -> int:
+    from .site import build_site
+    paths = build_site([Path(d) for d in a.out_dirs], Path(a.annotation) if a.annotation else None,
+                       Path(a.site), Path(a.manifest))
+    print(f"Wrote {len(paths)} data files to {a.site}/data")
+    return 0
+
+
 def _cmd_agree(a) -> int:
     from .evaluation import agreement, read_csv
     print(json.dumps(agreement(read_csv(a.a), read_csv(a.b)), indent=2))
@@ -124,6 +132,13 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("annotated")
     s.add_argument("--key", default="annotation/annotation_key.csv")
     s.set_defaults(fn=_cmd_evaluate)
+
+    s = sub.add_parser("site", help="build the data files of the static analysis site")
+    s.add_argument("out_dirs", nargs="+", help="analyze output dirs, one per API (dir name = API name)")
+    s.add_argument("--annotation", default="annotation")
+    s.add_argument("--site", default="site")
+    s.add_argument("--manifest", default="specs/manifest.json")
+    s.set_defaults(fn=_cmd_site)
 
     s = sub.add_parser("agree", help="Cohen's kappa between two annotated files (matched by id)")
     s.add_argument("a")

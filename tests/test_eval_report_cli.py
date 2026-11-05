@@ -104,3 +104,35 @@ def test_agreement_kappa():
     # unlabelled rows are ignored
     c = [{"id": 1, "label": ""}, {"id": 2, "label": "cle"}]
     assert agreement(a, c)["n_common"] == 1
+
+
+def _js_payload(path):
+    text = path.read_text(encoding="utf-8")
+    return json.loads(text.split(" = ", 1)[1].rstrip().rstrip(";"))
+
+
+def test_site_data_build(tmp_path, sample_spec, nlp):
+    from apiterm.pipeline import analyze, write_outputs
+    from apiterm.site import build_site
+    out = tmp_path / "out" / "sample"
+    write_outputs(analyze(sample_spec, None, nlp), out)
+    written = build_site([out], None, tmp_path / "site")
+    names = {p.name for p in written}
+    assert names == {"sample.js", "index.js"}                       # no annotation dir given
+    data = _js_payload(tmp_path / "site" / "data" / "sample.js")
+    assert all(len(r) == len(data["cols"]) for r in data["dependency"] + data["surface"])
+    assert data["summary"]["items_total"] > 0 and "dependency" in data["variation"]
+    assert "sample" in (tmp_path / "site" / "data" / "index.js").read_text()
+    assert all(len(r[-1]) <= 150 for r in data["dependency"])          # examples are truncated
+
+
+def test_derived_stats_weighted_views():
+    from apiterm.evaluation import derived_stats, make_sample
+    sample, key = make_sample({"x": fake_api()}, seed=1)
+    kmap = {int(k["id"]): k for k in key}
+    for r in sample:
+        r["label"] = "cle" if kmap[int(r["id"])]["tier"] == "1" else "not"
+    d = derived_stats(sample, key)
+    assert d["freq_4_9_cohesive_t_ge_2"]["strict"] == 1.0
+    assert d["freq_4_9_not_cohesive_t_lt_2"]["strict"] == 0.0
+    assert d["by_pattern_unweighted"]["N+N"]["annotated"] > 0
