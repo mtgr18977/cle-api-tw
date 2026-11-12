@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APITerm Results</title>
+<meta name="description" content="Terminology candidates extracted from the Stripe, GitHub and Kubernetes OpenAPI descriptions.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <strong>APITerm</strong>
+    <nav>
+      <a href="#overview">Overview</a><a href="#findings">Findings</a><a href="#explorer">Explorer</a>
+      <a href="#scatter">Scatter</a><a href="#variation">Variation</a><a href="#verbs">Verbs</a>
+      <a href="#annotation">Annotation</a><a href="#about">About</a>
+    </nav>
+    <label class="method">Method
+      <select id="method"><option value="dependency">dependencies</option><option value="surface">surface patterns</option></select>
+    </label>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Terminology candidates in API documentation</h1>
+  <p class="lead">Stripe, GitHub and Kubernetes OpenAPI descriptions compared with a CC-News English sample.
+    <b>Raw results:</b> thresholds are not calibrated and no human annotation has been measured yet.</p>
+
+  <section id="overview"><h2>Overview</h2>
+    <div id="cards" class="cards"></div>
+    <h3>Deduplication</h3><div class="scroll" id="dedup"></div>
+    <h3>Candidates by tier</h3><div id="tierchart"></div>
+  </section>
+
+  <section id="findings"><h2>Findings</h2>
+    <p class="mut">Computed in your browser from the candidate lists of the selected method.</p>
+    <div class="grid2">
+      <div><h3>Tier 1 rate by frequency</h3><div id="freqchart"></div>
+        <p class="mut">Candidates with frequency 2-3 cannot reach t &ge; 2 (t &le; &radic;c).</p></div>
+      <div><h3>Candidates absent from the reference</h3><div id="refzero"></div>
+        <p class="mut">Share with count 0 in the CC-News table (0-4 after pruning).</p></div>
+    </div>
+    <h3>Patterns</h3><div id="patternchart"></div>
+  </section>
+
+  <section id="explorer"><h2>Candidate explorer</h2>
+    <div class="row">
+      <label>API <select id="e-api"></select></label>
+      <label>Pattern <select id="e-pat"><option value="">all</option></select></label>
+      <label>Tier <select id="e-tier"><option value="">all</option><option value="1">1 CLE candidate</option><option value="2">2 human review</option><option value="general">general</option><option value="noise">noise</option></select></label>
+      <label>Min. freq <input id="e-min" type="number" min="1" value="1"></label>
+      <input id="e-q" type="search" placeholder="filter candidate or example…">
+      <span class="mut" id="e-count"></span>
+    </div>
+    <div class="scroll"><table id="e-table"></table></div>
+    <button id="e-more" type="button">Show more</button>
+  </section>
+
+  <section id="scatter"><h2>Cohesion &times; specificity</h2>
+    <div class="row"><label>API <select id="s-api"></select></label>
+      <span class="mut">x: t-score &middot; y: signed log-likelihood (symmetric log). Dashed lines: t = 2, LL = 3.84.</span></div>
+    <div class="chartbox"><canvas id="s-canvas" width="900" height="460"></canvas><div id="s-tip" class="tip" hidden></div></div>
+    <div id="s-legend" class="legend"></div>
+  </section>
+
+  <section id="variation"><h2>Verb variation per noun</h2>
+    <div class="row"><label>API <select id="v-api"></select></label>
+      <label><input type="checkbox" id="v-flag"> only same-class verbs</label>
+      <input id="v-q" type="search" placeholder="filter noun or verb…"><span class="mut" id="v-count"></span></div>
+    <div class="scroll"><table id="v-table"></table></div>
+    <p class="note">"Class" is a heuristic flag (e.g. create/generate/issue), and nouns mix senses
+      (<i>pull request</i> vs. <i>API request</i>). Suggested verbs are hints, not decisions.</p>
+  </section>
+
+  <section id="verbs"><h2>operationId vs. description verb</h2>
+    <div class="scroll" id="verb-summary"></div>
+    <h3>Most common divergences</h3>
+    <div class="row"><label>API <select id="d-api"></select></label></div>
+    <div class="scroll"><table id="d-table"></table></div>
+  </section>
+
+  <section id="annotation"><h2>Provisional annotation</h2>
+    <div class="note warn"><b>Draft, not a gold standard.</b> One LLM annotator (Claude), blind to scores. Use it to see
+      the shape of the data, not as truth. To keep <i>your</i> blind annotation of
+      <code>annotation_review60.csv</code> unbiased, the labels stay hidden until you reveal them.
+      <div class="row"><label><input type="checkbox" id="a-reveal"> Reveal provisional labels (also in the explorer)</label></div></div>
+    <div id="a-body" hidden></div>
+  </section>
+
+  <section id="about"><h2>About</h2>
+    <h3>Sources and licences</h3><div class="scroll" id="sources"></div>
+    <p class="mut">Sentence excerpts shown here are short quotations from these public specifications.
+      The CC-News reference counts come from the CC-News archive collected with news-please
+      (Hamborg et al. 2017, doi:10.5281/zenodo.4120316). The citation is attribution, not a licence.</p>
+    <h3>Limitations</h3>
+    <ul><li>The reference sample is small (90k articles, not random) and pruned to counts &ge; 5.</li>
+      <li>POS tagging of technical prose is imperfect; two documented fixes are applied.</li>
+      <li>GitHub has 1,534 <code>operationId</code>s against 1,260 distinct method+path operations; the cause was not investigated.</li>
+      <li>Thresholds (t &ge; 2, LL &ge; 3.84) are the plan's defaults, not yet calibrated.</li></ul>
+  </section>
+</main>
+<script src="data/index.js"></script>
+<script src="data/stripe.js"></script>
+<script src="data/github.js"></script>
+<script src="data/kubernetes.js"></script>
+<script src="data/annotation.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

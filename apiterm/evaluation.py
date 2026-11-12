@@ -182,3 +182,36 @@ def agreement(a: list[dict], b: list[dict]) -> dict:
             "raw_agreement": round(sum(x == y for x, y in zip(xs, ys)) / len(ids), 3) if ids else None,
             "kappa_4_labels": kappa(xs, ys), "kappa_cle_vs_rest": kappa(bx, by),
             "confusion_a_to_b": dict(sorted(confusion.items()))}
+
+
+def derived_stats(sample: list[dict], key: list[dict]) -> dict:
+    """Extra views of an annotated sample used by the site: pattern mix of terms and the
+    value of cohesion / of the surface method, all stratum-weighted like ``evaluate``."""
+    kmap = {int(k["id"]): k for k in key}
+    rows = []
+    for r in sample:
+        lab = LABELS.get((r.get("label") or "").strip().lower())
+        if lab:
+            rows.append((r, kmap[int(r["id"])], lab))
+
+    def wprec(items, hit=("cle",)):
+        den = sum(float(k["weight"]) for _, k, _ in items)
+        num = sum(float(k["weight"]) for _, k, l in items if l in hit)
+        return {"n": len(items), "strict": round(num / den, 3) if den else None,
+                "with_generic": round(sum(float(k["weight"]) for _, k, l in items
+                                          if l in ("cle", "generic")) / den, 3) if den else None}
+
+    by_pattern: dict[str, dict] = {}
+    for pat in sorted({r["pattern"] for r, _, _ in rows}):
+        sub = [x for x in rows if x[0]["pattern"] == pat]
+        by_pattern[pat] = {"annotated": len(sub), "cle": sum(1 for *_, l in sub if l == "cle"),
+                           "generic": sum(1 for *_, l in sub if l == "generic")}
+    main = [x for x in rows if x[1]["stratum"] not in ("negative", "surface_only")]
+    band = lambda stratum: [x for x in rows if x[1]["stratum"] == stratum and 4 <= int(x[1]["freq"]) <= 9]
+    return {
+        "by_pattern_unweighted": by_pattern,
+        "main_strata_in_surface": wprec([x for x in main if str(x[1]["in_surface"]) == "True"]),
+        "main_strata_not_in_surface": wprec([x for x in main if str(x[1]["in_surface"]) != "True"]),
+        "freq_4_9_cohesive_t_ge_2": wprec(band("tier1_mid")),
+        "freq_4_9_not_cohesive_t_lt_2": wprec(band("tier2_hi")),
+    }
